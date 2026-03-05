@@ -54,26 +54,117 @@ CREATE TABLE IF NOT EXISTS itens_pedido (
 
 
 -- A. Cadastrando Categorias e Clientes (As bases)
-INSERT INTO categorias (nome, descricao) VALUES
+INSERT INTO categorias (nome, descricao) 
+VALUES
 ('Eletrônicos', 'Produtos de tecnologia e hardware'),
 ('Livros', 'Livros físicos e digitais');
 
-INSERT INTO clientes (nome, email, cpf) VALUES
-('Ana Souza', 'ana.souza@email.com', '12345678901'),
-('Carlos Lima', 'carlos.lima@email.com', '98765432100');
+INSERT INTO clientes (nome, email, cpf) 
+VALUES
+('Ana Souza', 'ana.souza@email.com', '12345678501'),
+('Carlos Lima', 'carlos.lima@email.com', '98765332100');
+
 
 -- B. Cadastrando Produtos (Referenciando o ID da categoria)
 -- Supondo que 'Eletrônicos' seja ID 1 e 'Livros' seja ID 2
-INSERT INTO produtos (id_categoria, nome, preco, estoque) VALUES
+INSERT INTO produtos (id_categoria, nome, preco, estoque) 
+VALUES
 (1, 'Smartphone X', 2500.00, 50),
 (2, 'O Guia do Mochileiro das Galáxias', 42.00, 100);
 
 -- C. Criando um Pedido (Referenciando o ID do cliente)
-INSERT INTO pedidos (id_cliente, status, total_pedido) VALUES
+INSERT INTO pedidos (id_cliente, status, total_pedido) 
+VALUES
 (1, 'Pendente', 2542.00);
 
 -- D. Adicionando Itens ao Pedido (Referenciando Pedido e Produto)
 -- Aqui o aluno vê a normalização na prática: o item liga o pedido ao produto
-INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, preco_unitario) VALUES
+INSERT INTO itens_pedido (id_pedido, id_produto, quantidade, preco_unitario) 
+VALUES
 (1, 1, 1, 2500.00), -- 1 Smartphone
 (1, 2, 1, 42.00);    -- 1 Livro
+
+
+
+-- em sequencia  
+-- DROP TABLE itens_pedido;
+-- DROP TABLE pedidos;
+-- DROP TABLE produtos;
+-- DROP TABLE clientes;
+
+UPDATE pedidos
+SET status = 'Pago'
+WHERE id_pedido = 1;
+
+update clientes
+set email = 'ana.nova@email.com'
+where id_cliente = 1;
+
+select nome, preco
+from produtos
+where preco > 100.00
+order by preco desc;
+
+select p.nome as Produto, c.nome as Categoria, p.preco
+from produtos p
+		inner join categorias c
+        on p.id_categoria = c.id_categoria;
+
+select cl.nome, sum(p.total_pedido) as total_gasto
+from clientes cl
+		left join pedidos p
+	on cl.id_cliente = p.id_cliente
+group by cl.id_cliente, cl_nome;
+
+-- -------------
+select 
+	c.nome as Cliente,
+	pr.nome as Produto,
+    ip.quantidade,
+    ped.data_pedido
+from itens_pedido ip
+		 join pedidos ped
+	on ip.id_pedido = c.id_cliente
+	  join clientes c
+      on ped.id_cliente = c.id_cliente
+		join produtos pr
+	on ip.id_produto = pr.id_produto
+where ped.status = 'Pago';
+
+-- --------
+-- viwes temporarias 
+with resumo_vendas as(
+	-- essa é a view temporaria --
+    select 
+		id_produto,
+		sum(quantidade) as total_unidades,
+		sum(quantidade * preco_unitario) as receita_produto
+	from itens_pedido
+    group by id_produto
+)
+
+-- consultando a CTE como se fosse uma tebela real --
+select 
+	p.nome,
+    rv.total_unidades,
+    rv.receita_produto
+from produtos p
+join (select 
+		id_produto,
+		sum(quantidade) as total_unidades,
+		sum(quantidade * preco_unitario) as receita_produto
+	from itens_pedido
+    group by id_produto
+    ) rv 
+    on p.id_produto = rv.id_produto
+where rv.total_unidades > 5;
+
+-- ---
+
+select 
+	p.nome,
+    rv.total_unidades,
+    rv.receita_produto
+from produtos p
+join resumo_vendas rv on p.id_produto = rv.id_produto
+where rv.total_unidades > 5;
