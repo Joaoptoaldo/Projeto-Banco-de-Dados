@@ -1,0 +1,3 @@
+*.sql linguist-detectable=true
+*.sql linguist-language=SQL
+*.brM3 linguist-generated=true
