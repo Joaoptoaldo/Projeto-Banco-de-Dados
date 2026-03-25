@@ -76,5 +76,16 @@ VALUES
 -- registro: o cliente 1 (João Pedro) pegou o livro 2 (vinte mil léguas)
 INSERT INTO emprestimos (id_cliente, id_livro) VALUES (1, 2);
 
--- consulta para verificar os livros cadastrados
-select * from livros;
+-- listar todos os empréstimos com nome do cliente e livro
+SELECT 
+    e.id_emprestimo,
+    cl.nome AS cliente,-- seleciona o nome do cliente da tabela clientes, apelido "cl"
+    l.titulo AS livro,-- seleciona o titulo do livro da tabela livros, apelido "l"
+    e.data_emprestimo,
+    e.status-- seleciona o status do empréstimo (Ativo ou Devolvido)
+FROM emprestimos e-- define a tabela principal da consulta, "e" é um apelido
+       inner JOIN clientes cl 
+       ON e.id_cliente = cl.id_cliente-- faz uma junção (INNER JOIN) entre "emprestimos" e "clientes", relaciona pelo id_cliente
+       inner JOIN livros l 
+       ON e.id_livro = l.id_livro
+WHERE trim(upper(cl.nome)) like CONCAT('%', trim(upper('Pedro')), '%');-- mostra apenas os empréstimos do cliente com id = 1
